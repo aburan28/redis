@@ -335,6 +335,9 @@
 #define REDIS_NOTIFY_EXPIRED (1<<8)     /* x */
 #define REDIS_NOTIFY_EVICTED (1<<9)     /* e */
 #define REDIS_NOTIFY_ALL (REDIS_NOTIFY_GENERIC | REDIS_NOTIFY_STRING | REDIS_NOTIFY_LIST | REDIS_NOTIFY_SET | REDIS_NOTIFY_HASH | REDIS_NOTIFY_ZSET | REDIS_NOTIFY_EXPIRED | REDIS_NOTIFY_EVICTED)      /* A */
+#define REDIS_ISET 5
+
+#define REDIS_ENCODING_AVLTREE 8
 
 /* Using the following macro you can run code inside serverCron() with the
  * specified period, specified in milliseconds.
@@ -464,7 +467,25 @@ typedef struct redisClient {
     int bufpos;
     char buf[REDIS_REPLY_CHUNK_BYTES];
 } redisClient;
+/* ISET specialized AVL structures */
+typedef struct avlNode {
+       robj *obj;
+       double scores[2];
+       double subLeftMax, subRightMax;
+       char balance;
+       struct avlNode *left, *right, *parent, *next;
+} avlNode;
 
+typedef struct avl {
+       struct avlNode *root;
+    dict *dict;
+       unsigned long size;
+} avl;
+
+typedef struct iset {
+       avl *avltree;
+       dict *dict;
+} iset;
 struct saveparam {
     time_t seconds;
     int changes;
@@ -736,6 +757,8 @@ struct redisServer {
     struct redisCommand *delCommand, *multiCommand, *lpushCommand, *lpopCommand,
                         *rpopCommand;
     /* Fields used only for stats */
+    extern dictType isetDictType;
+
     time_t stat_starttime;          /* Server start time */
     long long stat_numcommands;     /* Number of processed commands */
     long long stat_numconnections;  /* Number of connections received */
@@ -824,8 +847,9 @@ struct redisServer {
                                        backlog buffer. */
     time_t repl_backlog_time_limit; /* Time without slaves after the backlog
                                        gets released. */
-    time_t repl_no_slaves_since;    /* We have no slaves since that time.
-                                       Only valid if server.slaves len is 0. */
+    time_t repl_no_slaves_since;    /* We have no slaves since that time.*/
+   robj *createIsetObject(void);
+                                    Only valid if server.slaves len is 0. */
     /* Replication (slave) */
     char *masterauth;               /* AUTH with this password with master */
     char *masterhost;               /* Hostname of master */
@@ -908,7 +932,16 @@ typedef struct pubsubPattern {
     redisClient *client;
     robj *pattern;
 } pubsubPattern;
-
+avl *avlCreate(void);
+avlNode *avlCreateNode(double lscore, double rscore, robj *obj);
+void avlFreeNode(avlNode *node, int removeList);
+void avlFree(avl *tree);
+int avlNodeCmp(avlNode *a, avlNode *b);
+void avlLeftRotation(avl * tree, avlNode *locNode);
+void avlRightRotation(avl * tree, avlNode *locNode);
+void avlResetBalance(avlNode *locNode);
+int avlInsertNode(avl * tree, avlNode *locNode, avlNode *insertNode);
+avlNode *avlInsert(avl *tree, double lscore, double rscore, robj *obj);
 typedef void redisCommandProc(redisClient *c);
 typedef int *redisGetKeysProc(struct redisCommand *cmd, robj **argv, int argc, int *numkeys, int flags);
 struct redisCommand {
@@ -1055,7 +1088,10 @@ int getClientLimitClassByName(char *name);
 char *getClientLimitClassName(int class);
 void flushSlavesOutputBuffers(void);
 void disconnectSlaves(void);
-
+void iaddCommand(redisClient *c);
+void iremCommand(redisClient *c);
+void irembystabCommand(redisClient *c);
+void istabCommand(redisClient *c);
 #ifdef __GNUC__
 void addReplyErrorFormat(redisClient *c, const char *fmt, ...)
     __attribute__((format(printf, 2, 3)));
