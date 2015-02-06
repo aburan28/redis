@@ -532,7 +532,27 @@ int rdbSaveObject(rio *rdb, robj *o) {
         } else {
             redisPanic("Unknown set encoding");
         }
-    } else if (o->type == REDIS_ZSET) {
+    } else if (o->type == REDIS_ISET) {
+    avl * tree = o->ptr;
+    dictIterator *di = dictGetIterator(tree->dict);
+    dictEntry *de;
+
+    if ((n = rdbSaveLen(rdb,dictSize(tree->dict))) == -1) return -1;
+    nwritten += n;
+
+    while((de = dictNext(di)) != NULL) {
+        robj *eleobj = dictGetKey(de);
+        double *scores = dictGetVal(de);
+
+        if ((n = rdbSaveStringObject(rdb,eleobj)) == -1) return -1;
+        nwritten += n;
+        if ((n = rdbSaveDoubleValue(rdb,scores[0])) == -1) return -1;
+        nwritten += n;
+        if ((n = rdbSaveDoubleValue(rdb,scores[1])) == -1) return -1;
+        nwritten += n;
+    }
+    dictReleaseIterator(di);
+}  else if (o->type == REDIS_ZSET) {
         /* Save a sorted set value */
         if (o->encoding == REDIS_ENCODING_ZIPLIST) {
             size_t l = ziplistBlobLen((unsigned char*)o->ptr);
