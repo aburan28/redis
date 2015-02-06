@@ -179,7 +179,16 @@ void freeSetObject(robj *o) {
         redisPanic("Unknown set encoding type");
     }
 }
+robj *createIsetObject(void) {
+    avl *a = avlCreate();
+    robj *o = createObject(REDIS_ISET,a);
+    o->encoding = REDIS_ENCODING_AVLTREE;
+    return o;
+}
 
+void freeIsetObject(robj *o) {
+    avlFree(o->ptr);
+}
 void freeZsetObject(robj *o) {
     zset *zs;
     switch (o->encoding) {
