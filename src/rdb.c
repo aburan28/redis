@@ -438,6 +438,8 @@ int rdbSaveObjectType(rio *rdb, robj *o) {
             return rdbSaveType(rdb,REDIS_RDB_TYPE_LIST);
         else
             redisPanic("Unknown list encoding");
+    case REDIS_ISET:
+        return rdbSaveType(rdb,REDIS_RDB_TYPE_ISET);
     case REDIS_SET:
         if (o->encoding == REDIS_ENCODING_INTSET)
             return rdbSaveType(rdb,REDIS_RDB_TYPE_SET_INTSET);
