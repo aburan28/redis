@@ -72,7 +72,37 @@ void aofRewriteBufferReset(void) {
     server.aof_rewrite_buf_blocks = listCreate();
     listSetFreeMethod(server.aof_rewrite_buf_blocks,zfree);
 }
+int rewriteIntervalSetObject(rio *r, robj *key, robj *o) {
+    long long count = 0, items = isetLength(o);
 
+    if (o->encoding == REDIS_ENCODING_AVLTREE) {
+        dictIterator *di = dictGetIterator(((avl *) o->ptr)->dict);
+        dictEntry *de;
+
+        while((de = dictNext(di)) != NULL) {
+            robj *eleobj = dictGetKey(de);
+            double **scores = dictGetVal(de);
+
+            if (count == 0) {
+                int cmd_items = (items > REDIS_AOF_REWRITE_ITEMS_PER_CMD) ?
+                    REDIS_AOF_REWRITE_ITEMS_PER_CMD : items;
+
+                if (rioWriteBulkCount(r,'*',2+cmd_items*3) == 0) return 0;
+                if (rioWriteBulkString(r,"IADD",4) == 0) return 0;
+                if (rioWriteBulkObject(r,key) == 0) return 0;
+            }
+            if (rioWriteBulkDouble(r,(*scores)[0]) == 0) return 0;
+            if (rioWriteBulkDouble(r,(*scores)[1]) == 0) return 0;
+            if (rioWriteBulkObject(r,eleobj) == 0) return 0;
+            if (++count == REDIS_AOF_REWRITE_ITEMS_PER_CMD) count = 0;
+            items--;
+        }
+        dictReleaseIterator(di);
+    } else {
+        redisPanic("Unknown interval set encoding");
+    }
+    return 1;
+}
 /* Return the current size of the AOF rerwite buffer. */
 unsigned long aofRewriteBufferSize(void) {
     listNode *ln = listLast(server.aof_rewrite_buf_blocks);
