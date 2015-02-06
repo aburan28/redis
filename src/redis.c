@@ -115,10 +115,7 @@ struct redisCommand *commandTable;
  *    accepted in cluster mode if the slot is marked as 'importing'.
  */
 struct redisCommand redisCommandTable[] = {
-    {"iadd",iaddCommand,-5,"wm",0,NULL,1,1,1,0,0},
-{"irem",iremCommand,-3,"w",0,NULL,1,1,1,0,0},
-{"irembystab",irembystabCommand,3,"w",0,NULL,1,1,1,0,0},
-{"istab",istabCommand,-3,"r",0,NULL,1,1,1,0,0},
+
     {"get",getCommand,2,"r",0,NULL,1,1,1,0,0},
     {"set",setCommand,-3,"wm",0,noPreloadGetKeys,1,1,1,0,0},
     {"setnx",setnxCommand,3,"wm",0,noPreloadGetKeys,1,1,1,0,0},
@@ -133,6 +130,10 @@ struct redisCommand redisCommandTable[] = {
     {"setrange",setrangeCommand,4,"wm",0,NULL,1,1,1,0,0},
     {"getrange",getrangeCommand,4,"r",0,NULL,1,1,1,0,0},
     {"substr",getrangeCommand,4,"r",0,NULL,1,1,1,0,0},
+    {"iadd",iaddCommand,-5,"wm",0,NULL,1,1,1,0,0},
+    {"irem",iremCommand,-3,"w",0,NULL,1,1,1,0,0},
+    {"irembystab",irembystabCommand,3,"w",0,NULL,1,1,1,0,0},
+    {"istab",istabCommand,-3,"r",0,NULL,1,1,1,0,0},
     {"incr",incrCommand,2,"wm",0,NULL,1,1,1,0,0},
     {"decr",decrCommand,2,"wm",0,NULL,1,1,1,0,0},
     {"mget",mgetCommand,-2,"r",0,NULL,1,-1,1,0,0},
