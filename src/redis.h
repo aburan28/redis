@@ -757,7 +757,6 @@ struct redisServer {
     struct redisCommand *delCommand, *multiCommand, *lpushCommand, *lpopCommand,
                         *rpopCommand;
     /* Fields used only for stats */
-    extern dictType isetDictType;
 
     time_t stat_starttime;          /* Server start time */
     long long stat_numcommands;     /* Number of processed commands */
@@ -1032,6 +1031,7 @@ extern dictType dbDictType;
 extern dictType shaScriptObjectDictType;
 extern double R_Zero, R_PosInf, R_NegInf, R_Nan;
 extern dictType hashDictType;
+extern dictType isetDictType;
 
 /*-----------------------------------------------------------------------------
  * Functions prototypes
