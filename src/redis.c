@@ -482,7 +482,14 @@ unsigned int dictEncObjHash(const void *key) {
         }
     }
 }
-
+dictType isetDictType = {
+    dictEncObjHash,            /* hash function */
+    NULL,                      /* key dup */
+    NULL,                      /* val dup */
+    dictEncObjKeyCompare,      /* key compare */
+    dictRedisObjectDestructor, /* key destructor */
+    NULL                       /* val destructor */
+};
 /* Sets type hash table */
 dictType setDictType = {
     dictEncObjHash,            /* hash function */
