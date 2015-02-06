@@ -49,6 +49,7 @@
 #include <math.h>
 #include <sys/resource.h>
 #include <sys/utsname.h>
+#include <i_set.c>
 
 /* Our shared "common" objects */
 
