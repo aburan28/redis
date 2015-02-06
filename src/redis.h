@@ -1045,7 +1045,10 @@ uint64_t crc64(uint64_t crc, const unsigned char *s, uint64_t l);
 void exitFromChild(int retcode);
 size_t popcount(void *s, long count);
 void redisSetProcTitle(char *title);
-
+void iaddCommand(redisClient *c);
+void iremCommand(redisClient *c);
+void irembystabCommand(redisClient *c);
+void istabCommand(redisClient *c);
 /* networking.c -- Networking and Client related operations */
 redisClient *createClient(int fd);
 void closeTimedoutClients(void);
